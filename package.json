@@ -1,0 +1,21 @@
+{
+  "name": "chat-app",
+  "version": "1.0.0",
+  "description": "Demo Chat App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node index.js"
+  },
+  "author": "Oiver Muir",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.5.1",
+    "socket.io-encrypt": "^0.2.1"
+  }
+}

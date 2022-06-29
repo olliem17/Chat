@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="/public/style.css" />
+  </head>
+  <body>
+    <div class="row">
+      <div class="column left">
+        <div class="branding">
+          <h1>Anon Chat v1.0</h1>
+        </div>
+        <div id="Group" class="chat_user con-users" onclick="selectUser(this.id)"">
+          <h4>Connected Users</h4>
+        </div>
+
+        <!-- <hr /> -->
+        <div id="users">
+          <!-- Users added here -->
+          <div class="chat_user" id="test" onclick="selectUser(this.id)">
+            <div class="msg_status" style="display: block">2</div>
+            <h5>Test User</h5>
+           
+          </div>
+        </div>
+      </div>
+      <div class="column right">
+        <div class="messages_header">
+        
+          <h1 id="msg_heading">Group Chat</h1>
+          <div class="icons">
+            <i class="fa fa-picture-o header_icon" aria-hidden="true"></i>
+            <i class="fa fa-phone header_icon" aria-hidden="true"></i>
+            <i class="fa fa-video-camera header_icon" aria-hidden="true"></i>
+          </div>
+        
+          
+        </div>
+        <div id="message_display">
+        <div id="Group_messages" class="messages"></div>
+      </div>
+      </div>
+    </div>
+    <div id="attach" style="display: none">
+      <form
+        id="upload"
+        action="/upload"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <input type="file" name="image" />
+        <input type="submit" name="submit" value="Upload" />
+      </form>
+    </div>
+
+    <form id="form" action="">
+      <div id="message_input">
+        <!-- <i id="attach_btn" class="fa fa-paperclip icon"></i> -->
+        <input id="input" autocomplete="on" />
+      </div>
+      <button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+
+const socket = io();
+                      const form = document.getElementById("form");
+                      const input = document.getElementById("input");
+                      const displayUsers = document.getElementById("users");
+                      const messages = document.getElementById("Group_messages");
+                      //const attach_btn = document.getElementById("attach_btn");
+                      const attach = document.getElementById("attach");
+                      attach.style.display = "none";
+
+                      var messageView = document.getElementById("Group_messages").id;
+                      console.log("current view: "+messageView);
+
+                     
+                      
+                      const newUserConnected = function (user) {
+                        userName = user || `User${Math.floor(Math.random() * 1000000)}`;
+                        socket.emit("new user", userName);
+                        addUser(userName);
+                      };
+
+                      form.addEventListener("submit", function (e) {
+                        e.preventDefault();
+                        if (input.value) {
+                          socket.emit("message", {
+                            message: input.value,
+                            user: userName,
+                          });
+                          //socket.emit("message", input.value);
+                          input.value = "";
+                        }
+                      });
+
+                      // attach_btn.addEventListener("click", function (e) {
+                      //   console.log("style: "+attach.style.display)
+                      //   if (attach.style.display == "none") {
+                      //       attach.style.display = "block";
+                      //   } else {
+                      //       attach.style.display = "none";
+                      //   }
+
+                      // });
+
+
+                      socket.on("message", function (data) {
+                        // window.scrollTo(0, document.body.scrollHeight);
+                        addNewMessage({ user: data.user, message: data.message });
+                      });
+
+                      socket.on("new user", function (data) {
+                        console.log("new user: "+data)
+                        data.map((user) => addUser(user));
+                      });
+
+                      socket.on("messages", function (data) {
+                          console.log("socket on messages");
+                        addMessages(data)
+                      });
+
+                      socket.on("user disconnected", function (userName) {
+                        document.querySelector(`.${userName}-userlist`).remove();
+                      });
+
+                      function addUser(userName) {
+                        if (!!document.querySelector(`.${userName}-userlist`)) {
+                          return;
+                        }
+                        const userBox = `
+                                            <div class="chat_user ${userName}-userlist" id="${userName}" onclick="selectUser(this.id)">
+                                              <div class="msg_status"></div>
+                                              <h5>${userName}</h5>
+                                            </div>
+                                          `;
+                        displayUsers.innerHTML += userBox;
+                      }
+
+                      function addNewMessage({ user, message }) {
+                        const time = new Date();
+                        const formattedTime = time.toLocaleString("en-US", {
+                          hour: "numeric",
+                          minute: "numeric",
+                        });
+                        console.log("username: "+userName);
+                        var msg = '';
+                        if (user === userName) {
+                          console.log("match: "+userName);
+                          msg = `
+                          <div class="message_row">
+                        <div class="outgoing_message">
+                          <div class="sent_message">
+                            <p>${message}</p>
+                            <div class="message_info">
+                              <span class="time_date">${formattedTime}</span>
+                            </div>
+                          </div>
+                        </div>
+                        </div>`;
+
+
+                        } else {
+                          console.log("no match: "+userName);
+                              msg = `
+                              <div class="message_row">
+                                  <div class="incoming_message">
+                                    <div class="received_message">
+                                      <p>${message}</p>
+                                      <div class="message_info">
+                                        <span class="message_author">${user}</span>
+                                        <span class="time_date">${formattedTime}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  </div>`;
+                      }
+
+                          console.log("msg: "+msg);
+                        messages.innerHTML += msg;
+                        window.scrollTo(0, document.body.scrollHeight);
+                      }
+
+                      function addMessages(data) {
+                          console.log("addMessages: "+JSON.stringify(data));
+                          data.forEach((element) => {
+                              addNewMessage({ user: element.user, message: element.message });
+                          });
+                      }
+
+                     
+                      function selectUser(id) {
+                        console.log("selectUser: "+id)
+                        displayUserMessages(id)
+                      }
+
+                      function displayUserMessages(id, messages) {
+                        msg_heading.innerHTML = id
+                        const currentView = document.getElementById(messageView);
+                        console.log("xxxxxxxxx: "+currentView)
+                        console.log("x display: "+currentView.style.display);
+                        currentView.style.display = "none";
+                        console.log("xxxxxxxx: "+currentView)
+                        messageView = id+"_messages";
+                        console.log("current View: "+messageView);
+                        let checkElementExists = document.getElementById(messageView);
+                        console.log("checkViewExists: "+checkElementExists);
+                        if (checkElementExists) {
+                          console.log("View Exists ");
+                          document.getElementById(messageView).style.display = "block";
+                        } else {
+                          console.log("View Doesn't Exists ");
+                          const attachTo = document.getElementById("message_display")
+                          const insertElement = `<div id="${id}_messages" class="messages"></div>`;
+                          attachTo.insertAdjacentHTML('beforeend', insertElement);
+                        }
+                        console.log("currentView: "+messageView);
+                      }
+
+                      function groupChat () {
+                        var x = document.getElementById("Group_messages");
+                        if (x.style.display === "none") {
+                          x.style.display = "block";
+                        } else {
+                          x.style.display = "none";
+                        }
+                      }
+
+                      var username = <%- JSON.stringify(userId) %> 
+                      newUserConnected(username);
+
+
+
+    </script>
+                      
+  </body>
+</html>

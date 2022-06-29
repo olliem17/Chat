@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" type="text/css" href="public/style.css" />
+  </head>
+  <body>
+    <div id="login_screen">
+      <div class="login">
+        <h1>Anon Chat v2.0</h1>
+        <p></p>
+        <div class="form-center">
+        <form id="chat-login" action="/user/login" method='POST'>
+          <input name="username" id="username" autocomplete="off" 
+          placeholder="Username" pattern="[A-Za-z0-9]+" required
+          title="Username should only contain letters and numbers"/>
+          <button>Login</button>
+        </form>
+      </div>
+
+      </div>
+    </div>
+    
+    
+    <script>
+
+      /*const login = document.getElementById("chat-login");
+      const loginUsername = document.getElementById("username");
+
+      var userName = "";
+
+      const newUserConnected = function (user) {
+        userName = user || `User${Math.floor(Math.random() * 1000000)}`;
+        socket.emit("new user", userName);
+        addUser(userName);
+      };
+
+      
+
+      login.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (loginUsername.value) {
+         // userName = loginUsername.value
+          console.log(loginUsername.value+' logging in');
+          
+          const screen = document.getElementById("login_screen");
+           screen.style.display = "none";
+           newUserConnected(loginUsername.value);
+          loginUsername.value = "";
+        }
+      });*/
+      
+    </script>
+  </body>
+</html>

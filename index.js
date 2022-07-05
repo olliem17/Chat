@@ -26,10 +26,18 @@ app.use(
   })
 );
 
+/////////////////////
+//     Globals     //
+/////////////////////
+
 var session;
-var user;
 var activeUsers = new Set();
 var messages = [];
+var privateMessages = [];
+
+//////////////////////
+//      Routes      //
+//////////////////////
 
 app.get("/", function (req, res) {
   session = req.session;
@@ -71,8 +79,6 @@ app.get("/chat", (req, res) => {
 });
 
 app.post('/upload', upload.single('image'), function (req, res, next) {
-  // req.file is the `avatar` file
-  // req.body will hold the text fields, if there were any
   console.log("file upload: "+JSON.stringify(req.file));
   console.log("file upload: "+req.file.filename);
   res.sendStatus(200);
@@ -83,35 +89,70 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Socket Handling
+/////////////////////
+// Socket Handling //
+/////////////////////
+
 io.on("connection", function (socket) {
+
   console.log("Socket Connection Established");
 
-  socket.on("new user", function (data) {
+  socket.on("new user", function (data) 
+  {
+    console.log("new user\n ------------------------------------");
     socket.userId = data;
     console.log("socket id: "+socket.id);
-    const sockets = Array.from(io.sockets.sockets).map(socket => socket[0]);
-    console.log("sockets: "+sockets);
+    const sockets = io.sockets.sockets;
+    console.log("number of sockets: "+sockets.size);
+    console.log("getSocketId: "+getSocketId(sockets, data));
     activeUsers.add(data);
     console.log("user connected: " + socket.userId);
     io.emit("new user", [...activeUsers]);
     io.to(socket.id).emit('messages', [...messages]);
   });
 
-  socket.on("disconnect", function () {
+  socket.on("disconnect", function () 
+  {
     activeUsers.delete(socket.userId);
     io.emit("user disconnected", socket.userId);
     console.log("user disconnected: " + socket.userId);
   });
 
-  socket.on("message", function (data) {
+  socket.on("message", function (data) 
+  {
     console.log("message: " + data.message);
     messages.push(data);
     console.log("messages: "+JSON.stringify(messages))
     io.emit("message", data);
   });
+
+  socket.on("private message", function (data) 
+  {
+    console.log("private message: " + data.message);
+    privateMessages.push(data);
+    console.log("messages: "+JSON.stringify(privateMessages))
+    const sockets = io.sockets.sockets;
+    const to = getSocketId(sockets, data.to)
+    const from = getSocketId(sockets, data.from)
+    io.to(to).emit("private message", data);
+    io.to(from).emit("private message", data);
+  });
 });
 
-server.listen(PORT, function () {
+server.listen(PORT, function () 
+{
   console.log(`listening on http://localhost:${PORT}`);
 });
+
+// Return socket id
+function getSocketId(sockets, username) 
+{
+  for (const [socketid, object] of sockets) {
+    console.log("key: "+socketid);
+    console.log("userId: "+object.userId);
+    console.log("Id: "+object.id);
+    if (object.userId === username) {
+      return socketid;
+    }
+  }
+}

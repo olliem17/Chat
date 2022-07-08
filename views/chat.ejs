@@ -6,6 +6,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/public/style.css" />
   </head>
   <body>
@@ -36,11 +37,15 @@
           <div class="icons">
             <i class="fa fa-picture-o header_icon" aria-hidden="true"></i>
             <i class="fa fa-phone header_icon" aria-hidden="true"></i>
-            <i class="fa fa-video-camera header_icon" aria-hidden="true"></i>
+            <i class="fa fa-video-camera header_icon" id="video_call" aria-hidden="true"></i>
           </div>
         
           
         </div>
+
+       
+
+
         <div id="message_display">
         <div id="Group_messages" class="messages"></div>
       </div>
@@ -59,6 +64,7 @@
         <input type="submit" name="submit" value="Upload" />
       </form>
     </div> -->
+    
 
     <form id="form" action="">
       <div id="message_input">
@@ -67,11 +73,35 @@
       </div>
       <button>Send</button>
     </form>
+
+    <div class="video_main" id="video_main" style="display: none;">
+    <div class="videos_group" id="videos_group" >
+      <div id="video_grid">
+
+      </div>
+    </div>
+    <div class="options">
+      <div class="options__left">
+        <div id="stopVideo" class="options__button">
+          <i class="fa fa-video-camera"></i>
+        </div>
+        <div id="muteButton" class="options__button">
+          <i class="fa fa-microphone"></i>
+        </div>
+      </div>
+      <div class="options__right">
+        <div id="inviteButton" class="options__button">
+          <i class="fa fa-plus"></i>
+        </div>
+      </div>
+    </div>
+  </div>
     <span id='userId' hidden>
-      <%= JSON.stringify(userId); %>
+      <%= JSON.stringify(data.userId); %>
   </span>
     
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.5/dist/peerjs.min.js"></script>
     <script src="/public/chat.js"></script>
   </body>
 </html>

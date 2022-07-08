@@ -3,9 +3,16 @@ const form = document.getElementById("form");
 const input = document.getElementById("input");
 const displayUsers = document.getElementById("users");
 const messages = document.getElementById("Group_messages");
+const video_call = document.getElementById("video_call");
 
 var userName;
 var messageView = document.getElementById("Group_messages").id;
+
+var peer = new Peer(undefined, {
+  path: "/peerjs",
+  host: "/",
+  port: "3001",
+  });
 
 /////////////////////
 // Event Listeners //
@@ -14,13 +21,11 @@ var messageView = document.getElementById("Group_messages").id;
 form.addEventListener("submit", function (e) {
   e.preventDefault();
   if (input.value) {
-    if (messageView == 'Group_messages') {
-
+    if (messageView == "Group_messages") {
       socket.emit("message", {
         message: input.value,
         user: userName,
       });
-
     } else {
       let sendTo = messageView.split("_")[0];
       console.log("sendTo: " + sendTo);
@@ -29,10 +34,14 @@ form.addEventListener("submit", function (e) {
         to: sendTo,
         from: username,
       });
-
     }
     input.value = "";
   }
+});
+
+video_call.addEventListener("click", function (e) {
+  e.preventDefault();
+  startVideoCall();
 });
 
 ///////////////////////////////////
@@ -40,22 +49,22 @@ form.addEventListener("submit", function (e) {
 ///////////////////////////////////
 
 socket.on("message", function (data) {
-  addMessage(data, 'group');
+  addMessage(data, "group");
 });
 
 socket.on("new user", function (data) {
-  console.log("new user: " + data)
+  console.log("new user: " + data);
   data.map((user) => addUser(user));
 });
 
 socket.on("messages", function (data) {
   console.log("socket on messages");
-  addMessages(data)
+  addMessages(data);
 });
 
 socket.on("private message", function (data) {
   console.log("private message: " + data);
-  addMessage(data, 'private');
+  addMessage(data, "private");
 });
 
 socket.on("user disconnected", function (userName) {
@@ -99,7 +108,7 @@ function addMessage(data, msgType) {
     minute: "numeric",
   });
   console.log("username: " + userName);
-  var msg = '';
+  var msg = "";
   if (data.user === userName || data.from == userName) {
     console.log("match: " + userName);
     console.log("from: " + data.from);
@@ -113,16 +122,16 @@ function addMessage(data, msgType) {
               </div>
             </div>
           </div>`;
-
   } else {
-
     console.log("no match: " + userName);
     msg = `<div class="message_row">
               <div class="incoming_message">
                 <div class="received_message">
                   <p>${data.message}</p>
                   <div class="message_info">
-                    <span class="message_author">${msgType == "group" ? data.user : data.from}</span>
+                    <span class="message_author">${
+                      msgType == "group" ? data.user : data.from
+                    }</span>
                     <span class="time_date">${formattedTime}</span>
                   </div>
                 </div>
@@ -132,7 +141,7 @@ function addMessage(data, msgType) {
   console.log("msg: " + msg);
   if (msgType == "group") {
     messages.innerHTML += msg;
-    addMessageNotification ("Group");
+    addMessageNotification("Group");
   } else {
     console.log("add private message: to: " + data.to + " from: " + data.from);
     if (username == data.from) {
@@ -145,28 +154,28 @@ function addMessage(data, msgType) {
       // add notifcation
       addMessageNotification(data.from);
     }
-
   }
   window.scrollTo(0, document.body.scrollHeight);
 }
 
-function addMessageNotification (from) {
-  const userView = from+"_messages";
+function addMessageNotification(from) {
+  const userView = from + "_messages";
   if (userView != messageView) {
-    const sfx = new Audio('/public/Notification.mp3');
+    const sfx = new Audio("/public/Notification.mp3");
     sfx.play();
-    const target = document.getElementById(from).getElementsByClassName("msg_status")[0];
-    console.log("target notification: "+target)
+    const target = document
+      .getElementById(from)
+      .getElementsByClassName("msg_status")[0];
+    console.log("target notification: " + target);
     target.style.display = "block";
     if (!target.innerText) {
-      target.innerText = 1
+      target.innerText = 1;
     } else {
       let notificationNum = parseInt(target.innerText);
-      notificationNum++
+      notificationNum++;
       target.innerText = notificationNum;
     }
   }
-  
 }
 
 //////////////////////
@@ -176,7 +185,7 @@ function addMessageNotification (from) {
 function addMessages(data) {
   console.log("addMessages: " + JSON.stringify(data));
   data.forEach((element) => {
-    addMessage(element, 'group');
+    addMessage(element, "group");
   });
 }
 
@@ -185,17 +194,19 @@ function addMessages(data) {
 /////////////////////////////
 
 function selectUser(id) {
-  console.log("selectUser: " + id)
-  const elements=document.getElementsByClassName("selected")
-  for(const element of elements){
-    element.classList.remove("selected")
+  console.log("selectUser: " + id);
+  const elements = document.getElementsByClassName("selected");
+  for (const element of elements) {
+    element.classList.remove("selected");
   }
   const user = document.getElementById(id);
-  user.classList.add('selected');
-  const target = document.getElementById(id).getElementsByClassName("msg_status")[0];
+  user.classList.add("selected");
+  const target = document
+    .getElementById(id)
+    .getElementsByClassName("msg_status")[0];
   target.innerText = null;
   target.style.display = "none";
-  displayUserMessages(id)
+  displayUserMessages(id);
 }
 
 ////////////////////////////////////
@@ -203,12 +214,12 @@ function selectUser(id) {
 ////////////////////////////////////
 
 function displayUserMessages(id, messages) {
-  msg_heading.innerHTML = id
+  msg_heading.innerHTML = id;
   const currentView = document.getElementById(messageView);
-  console.log("xxxxxxxxx: " + currentView)
+  console.log("xxxxxxxxx: " + currentView);
   console.log("x display: " + currentView.style.display);
   currentView.style.display = "none";
-  console.log("xxxxxxxx: " + currentView)
+  console.log("xxxxxxxx: " + currentView);
   messageView = id + "_messages";
   console.log("current View: " + messageView);
   let checkElementExists = document.getElementById(messageView);
@@ -218,9 +229,9 @@ function displayUserMessages(id, messages) {
     document.getElementById(messageView).style.display = "block";
   } else {
     console.log("View Doesn't Exists ");
-    const attachTo = document.getElementById("message_display")
+    const attachTo = document.getElementById("message_display");
     const insertElement = `<div id="${id}_messages" class="messages"></div>`;
-    attachTo.insertAdjacentHTML('beforeend', insertElement);
+    attachTo.insertAdjacentHTML("beforeend", insertElement);
   }
   console.log("currentView: " + messageView);
 }
@@ -243,7 +254,6 @@ function groupChat() {
 /////////////////////////////////////
 
 function attachPrivateMessageView(user) {
-
   if (user != username) {
     let view = user + "_messages";
     console.log("current View: " + view);
@@ -251,10 +261,10 @@ function attachPrivateMessageView(user) {
     console.log("checkViewExists: " + checkViewExists);
     if (!checkViewExists) {
       console.log("View Doesn't Exists ");
-      const attachTo = document.getElementById("message_display")
+      const attachTo = document.getElementById("message_display");
       const insertElement = `<div id="${user}_messages" class="messages"></div>`;
-      attachTo.insertAdjacentHTML('beforeend', insertElement);
-      document.getElementById(view).style.display = "none";;
+      attachTo.insertAdjacentHTML("beforeend", insertElement);
+      document.getElementById(view).style.display = "none";
     }
   }
 }
@@ -263,7 +273,7 @@ function attachPrivateMessageView(user) {
 // Get the EJS Passed User ID //
 ////////////////////////////////
 
-const jsonElement = document.getElementById("userId")
+const jsonElement = document.getElementById("userId");
 var username = JSON.parse(jsonElement.innerText);
 jsonElement.remove();
 
@@ -272,3 +282,35 @@ jsonElement.remove();
 //////////////////////
 
 newUserConnected(username);
+
+///////////////////////////
+// Video Stream Handling //
+///////////////////////////
+const videosMain = document.getElementById("video_main");
+const videosGroup = document.getElementById("videos_group");
+const videoGrid = document.getElementById("video_grid");
+
+function startVideoCall() {
+  let myVideoStream;
+  console.log("videosGroup: " + videosGroup);
+  videosMain.style.display = "block";
+  const myVideo = document.createElement("video");
+  myVideo.muted = true;
+  navigator.mediaDevices
+    .getUserMedia({
+      audio: true,
+      video: true,
+    })
+    .then((stream) => {
+      myVideoStream = stream;
+      addVideoStream(myVideo, stream);
+    });
+}
+
+const addVideoStream = (video, stream) => {
+  video.srcObject = stream;
+  video.addEventListener("loadedmetadata", () => {
+     video.play();
+     videoGrid.append(video);
+  });
+};

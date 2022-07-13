@@ -20,7 +20,7 @@ jsonElement.remove();
 // Setup Peers //
 /////////////////
 
-var peerId = '';
+var peerId = "";
 
 var peer = new Peer(username, {
   path: "/peerjs",
@@ -31,7 +31,7 @@ var peer = new Peer(username, {
 
 peer.on("open", (id) => {
   peerId = id;
-  console.log("peer_on_open: "+peerId);
+  console.log("peer_on_open: " + peerId);
   newUserConnected(username);
 });
 
@@ -63,7 +63,7 @@ form.addEventListener("submit", function (e) {
 video_call.addEventListener("click", function (e) {
   e.preventDefault();
   const sendStreamTo = messageView.split("_")[0];
-  console.log("sendStreamTo: "+sendStreamTo+" from: "+username)
+  console.log("sendStreamTo: " + sendStreamTo + " from: " + username);
   startVideoCall(sendStreamTo);
 });
 
@@ -100,12 +100,11 @@ socket.on("user disconnected", function (userName) {
 
 const newUserConnected = function (user) {
   userName = user || `User${Math.floor(Math.random() * 1000000)}`;
-  console.log("New User Peer Id: "+peerId);
-  socket.emit("new user", 
-                        {
-                          userId: userName,
-                          peerId: peerId,
-                        });
+  console.log("New User Peer Id: " + peerId);
+  socket.emit("new user", {
+    userId: userName,
+    peerId: peerId,
+  });
   addUser(userName);
 };
 
@@ -304,27 +303,36 @@ function attachPrivateMessageView(user) {
 const videosMain = document.getElementById("video_main");
 const videosGroup = document.getElementById("videos_group");
 const videoGrid = document.getElementById("video_grid");
-var myVideoStream;
+
+
 function startVideoCall(sendTo) {
-  
   console.log("videosGroup: " + videosGroup);
   videosMain.style.display = "block";
   const myVideo = document.createElement("video");
+  
   myVideo.muted = true;
-  navigator.mediaDevices
-    .getUserMedia({
-      audio: true,
-      video: true,
-    })
-    .then((stream) => {
-      myVideoStream = stream;
-      addVideoStream(myVideo, myVideoStream);
-    });
-    socket.emit("video call", {
-      to: sendTo,
-      from: username,
-    });
 
+  const getUserMedia =
+    navigator.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia;
+  getUserMedia(
+    { video: true, audio: true },
+    function (stream) {
+      console.log("DISPLAY MY STREAM");
+      addVideoStream(myVideo, stream);
+
+      var call = peer.call(sendTo, stream);
+
+      // call.on("stream", function (remoteStream) {
+      //   console.log("DISPLAY CON PEER STREAM");
+      //   addVideoStream(myVideo, remoteStream);
+      // });
+    },
+    function (err) {
+      console.log("Failed to get local stream", err);
+    }
+  );
 }
 
 function addVideoStream(video, stream) {
@@ -335,14 +343,33 @@ function addVideoStream(video, stream) {
   });
 }
 
-function connectToNewUser (peerId, stream) {
+/*peer.on('call', function(call) {
+  videosMain.style.display = "block";
+  const userVideo = document.createElement("video");
+  console.log("CALL STREAM");
+  const getUserMedia =
+    navigator.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia;
+  getUserMedia({video: true, audio: true}, function(stream) {
+    call.answer(stream); // Answer the call with an A/V stream.
+    call.on('stream', function(remoteStream) {
+      console.log("ADD REMOTE STREAM");
+      addVideoStream(userVideo, remoteStream);
+    });
+  }, function(err) {
+    console.log('Failed to get local stream' ,err);
+  });
+});*/
+
+/*
+function connectToNewUser(peerId, stream) {
   const call = peer.call(peerId, stream);
   const video = document.createElement("video");
   call.on("stream", (userVideoStream) => {
     addVideoStream(video, userVideoStream);
   });
-};
-
+}
 
 
 peer.on("call", (call) => {
@@ -356,4 +383,4 @@ peer.on("call", (call) => {
 socket.on("video call", function (data) {
   console.log("video call: " + data);
   connectToNewUser(data, myVideoStream);
-});
+});*/

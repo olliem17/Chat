@@ -4,13 +4,20 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const sessions = require("express-session");
-const favicon = require('serve-favicon')
+const favicon = require("serve-favicon");
+const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
-const path = require('path')
+const path = require("path");
 const multer = require("multer");
 const upload = multer({ dest: "public/" });
 const app = express();
 const http = require("http");
+const http_options = {
+  key: fs.readFileSync("key.pem"),
+  cert: fs.readFileSync("cert.pem"),
+  requestCert: false,
+  rejectUnauthorized: false,
+};
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
@@ -22,7 +29,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/public", express.static("public"));
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
+app.use(favicon(path.join(__dirname, "public", "favicon.ico")));
 app.use(cookieParser());
 app.use(
   sessions({
@@ -47,7 +54,6 @@ var privateMessages = [];
 //////////////////////
 
 app.get("/", function (req, res) {
-  
   session = req.session;
   //session.roomid = uuidv4();
 
@@ -75,7 +81,7 @@ app.post("/user/login", function (req, res) {
 app.get("/chat", (req, res) => {
   session = req.session;
   if (session.userid) {
-    res.render("chat", {data: { userId: session.userid}});
+    res.render("chat", { data: { userId: session.userid } });
   } else {
     res.send("Error not logged in. <a href='/logout'> Click to login</a>");
   }
@@ -105,12 +111,14 @@ io.on("connection", function (socket) {
 
   socket.on("new user", function (data) {
     console.log("new user\n ------------------------------------");
-    socket.userId = data;
+    socket.userId = data.userId;
+    socket.peerId = data.peerId;
     console.log("socket id: " + socket.id);
+    console.log("socket peerId: " + socket.peerId);
     const sockets = io.sockets.sockets;
     console.log("number of sockets: " + sockets.size);
-    console.log("getSocketId: " + getSocketId(sockets, data));
-    activeUsers.add(data);
+    console.log("getSocketId: " + getSocketId(sockets, data.userId));
+    activeUsers.add(data.userId);
     console.log("user connected: " + socket.userId);
     io.emit("new user", [...activeUsers]);
     io.to(socket.id).emit("messages", [...messages]);
@@ -139,6 +147,14 @@ io.on("connection", function (socket) {
     io.to(to).emit("private message", data);
     io.to(from).emit("private message", data);
   });
+
+  socket.on("video call", function (data) {
+    const sockets = io.sockets.sockets;
+    const to = getSocketId(sockets, data.to);
+    const peerId = getPeerId(sockets, data.to)
+    console.log("video call - peer: " + data.to);
+    io.to(to).emit("video call", peerId);
+  });
 });
 
 server.listen(PORT, function () {
@@ -157,17 +173,33 @@ function getSocketId(sockets, username) {
   }
 }
 
+function getPeerId(sockets, username) {
+  for (const [socketid, object] of sockets) {
+    console.log("key: " + socketid);
+    console.log("userId: " + object.userId);
+    console.log("peerId: " + object.peerId);
+    if (object.userId === username) {
+      return object.peerId;
+    }
+  }
+}
+
 ////////////////////////
 // Peer Server Config //
 ////////////////////////
 
-var ExpressPeerServer = require('peer').ExpressPeerServer;
-var peerExpress = require('express');
+var ExpressPeerServer = require("peer").ExpressPeerServer;
+var peerExpress = require("express");
 var peerApp = peerExpress();
-var peerServer = require('http').createServer(peerApp);
-var options = { debug: true }
-var peerPort = 3001;
-peerApp.use('/peerjs', ExpressPeerServer(peerServer, options));
+var peerServer = http.createServer(peerApp);
+var options = {
+  debug: true,
+ /* secure: true,
+  ssl: {
+    key: fs.readFileSync("key.pem"),
+    cert: fs.readFileSync("cert.pem"),
+  },*/
+};
+var peerPort = 443;
+peerApp.use("/peerjs", ExpressPeerServer(peerServer, options));
 peerServer.listen(peerPort);
-
-

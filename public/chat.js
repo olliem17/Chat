@@ -4,15 +4,36 @@ const input = document.getElementById("input");
 const displayUsers = document.getElementById("users");
 const messages = document.getElementById("Group_messages");
 const video_call = document.getElementById("video_call");
-
-var userName;
 var messageView = document.getElementById("Group_messages").id;
 
-var peer = new Peer(undefined, {
+var userName;
+
+////////////////////////////////
+// Get the EJS Passed User ID //
+////////////////////////////////
+
+const jsonElement = document.getElementById("userId");
+var username = JSON.parse(jsonElement.innerText);
+jsonElement.remove();
+
+/////////////////
+// Setup Peers //
+/////////////////
+
+var peerId = '';
+
+var peer = new Peer(username, {
   path: "/peerjs",
   host: "/",
-  port: "3001",
-  });
+  //secure:true,
+  port: 443,
+});
+
+peer.on("open", (id) => {
+  peerId = id;
+  console.log("peer_on_open: "+peerId);
+  newUserConnected(username);
+});
 
 /////////////////////
 // Event Listeners //
@@ -41,7 +62,9 @@ form.addEventListener("submit", function (e) {
 
 video_call.addEventListener("click", function (e) {
   e.preventDefault();
-  startVideoCall();
+  const sendStreamTo = messageView.split("_")[0];
+  console.log("sendStreamTo: "+sendStreamTo+" from: "+username)
+  startVideoCall(sendStreamTo);
 });
 
 ///////////////////////////////////
@@ -77,7 +100,12 @@ socket.on("user disconnected", function (userName) {
 
 const newUserConnected = function (user) {
   userName = user || `User${Math.floor(Math.random() * 1000000)}`;
-  socket.emit("new user", userName);
+  console.log("New User Peer Id: "+peerId);
+  socket.emit("new user", 
+                        {
+                          userId: userName,
+                          peerId: peerId,
+                        });
   addUser(userName);
 };
 
@@ -269,29 +297,16 @@ function attachPrivateMessageView(user) {
   }
 }
 
-////////////////////////////////
-// Get the EJS Passed User ID //
-////////////////////////////////
-
-const jsonElement = document.getElementById("userId");
-var username = JSON.parse(jsonElement.innerText);
-jsonElement.remove();
-
-//////////////////////
-// Connect the User //
-//////////////////////
-
-newUserConnected(username);
-
 ///////////////////////////
 // Video Stream Handling //
 ///////////////////////////
+
 const videosMain = document.getElementById("video_main");
 const videosGroup = document.getElementById("videos_group");
 const videoGrid = document.getElementById("video_grid");
-
-function startVideoCall() {
-  let myVideoStream;
+var myVideoStream;
+function startVideoCall(sendTo) {
+  
   console.log("videosGroup: " + videosGroup);
   videosMain.style.display = "block";
   const myVideo = document.createElement("video");
@@ -303,14 +318,42 @@ function startVideoCall() {
     })
     .then((stream) => {
       myVideoStream = stream;
-      addVideoStream(myVideo, stream);
+      addVideoStream(myVideo, myVideoStream);
     });
+    socket.emit("video call", {
+      to: sendTo,
+      from: username,
+    });
+
 }
 
-const addVideoStream = (video, stream) => {
+function addVideoStream(video, stream) {
   video.srcObject = stream;
-  video.addEventListener("loadedmetadata", () => {
-     video.play();
-     videoGrid.append(video);
+  video.addEventListener("loadedmetadata", function () {
+    video.play();
+    videoGrid.append(video);
+  });
+}
+
+function connectToNewUser (peerId, stream) {
+  const call = peer.call(peerId, stream);
+  const video = document.createElement("video");
+  call.on("stream", (userVideoStream) => {
+    addVideoStream(video, userVideoStream);
   });
 };
+
+
+
+peer.on("call", (call) => {
+  call.answer(stream);
+  const video = document.createElement("video");
+  call.on("stream", (userVideoStream) => {
+    addVideoStream(video, userVideoStream);
+  });
+});
+
+socket.on("video call", function (data) {
+  console.log("video call: " + data);
+  connectToNewUser(data, myVideoStream);
+});

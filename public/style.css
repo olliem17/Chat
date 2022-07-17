@@ -445,6 +445,9 @@ hr {
     flex-wrap: wrap; 
 }
 
+video{
+  max-width:480px;
+}
 .options {
   position: fixed;
   bottom: 0;

@@ -1,11 +1,19 @@
 const socket = io();
+/*const socket = io("/", {
+     reconnection:false,
+     transports: ['websocket'],
+     agent: false, 
+     upgrade: false,
+     rejectUnauthorized: false
+});*/
+
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const displayUsers = document.getElementById("users");
 const messages = document.getElementById("Group_messages");
 const video_call = document.getElementById("video_call");
-var messageView = document.getElementById("Group_messages").id;
 
+var messageView = document.getElementById("Group_messages").id;
 var userName;
 
 ////////////////////////////////
@@ -25,8 +33,8 @@ var peerId = "";
 var peer = new Peer(username, {
   path: "/peerjs",
   host: "/",
-  //secure:true,
-  port: 443,
+  secure:true,
+  port: 3000
 });
 
 peer.on("open", (id) => {
@@ -302,15 +310,16 @@ function attachPrivateMessageView(user) {
 
 const videosMain = document.getElementById("video_main");
 const videosGroup = document.getElementById("videos_group");
-const videoGrid = document.getElementById("video_grid");
 
 
 function startVideoCall(sendTo) {
   console.log("videosGroup: " + videosGroup);
   videosMain.style.display = "block";
-  const myVideo = document.createElement("video");
   
-  myVideo.muted = true;
+  const myVideo = document.createElement("video");
+  const peerVideo = document.createElement("video");
+  
+  myVideo.muted = false;
 
   const getUserMedia =
     navigator.getUserMedia ||
@@ -319,15 +328,17 @@ function startVideoCall(sendTo) {
   getUserMedia(
     { video: true, audio: true },
     function (stream) {
-      console.log("DISPLAY MY STREAM");
+      
       addVideoStream(myVideo, stream);
-
       var call = peer.call(sendTo, stream);
 
-      // call.on("stream", function (remoteStream) {
-      //   console.log("DISPLAY CON PEER STREAM");
-      //   addVideoStream(myVideo, remoteStream);
-      // });
+     call.on("stream", function (remoteStream) {
+       
+       console.log("DISPLAY MY STREAM");
+        
+        //console.log("DISPLAY REMOTE STREAM");
+        addVideoStream(peerVideo, remoteStream);
+     });
     },
     function (err) {
       console.log("Failed to get local stream", err);
@@ -335,52 +346,42 @@ function startVideoCall(sendTo) {
   );
 }
 
-function addVideoStream(video, stream) {
+function addVideoStream(video, stream, user) {
   video.srcObject = stream;
+  const videoGrid = document.getElementById("video_grid");
   video.addEventListener("loadedmetadata", function () {
     video.play();
-    videoGrid.append(video);
+    videoGrid.appendChild(video);
+    if(user == username) {
+      var content = document.createTextNode(username);
+       videoGrid.appendChild(content);
+    }
   });
 }
 
-/*peer.on('call', function(call) {
+peer.on('call', function(call) {
   videosMain.style.display = "block";
-  const userVideo = document.createElement("video");
+  const myVideo = document.createElement("video");
+  const peerVideo = document.createElement("video");
+  
   console.log("CALL STREAM");
   const getUserMedia =
     navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia;
-  getUserMedia({video: true, audio: true}, function(stream) {
+  getUserMedia({video: true, audio: false}, function(stream) {
+    
+    
     call.answer(stream); // Answer the call with an A/V stream.
+    
     call.on('stream', function(remoteStream) {
       console.log("ADD REMOTE STREAM");
-      addVideoStream(userVideo, remoteStream);
+     
+      addVideoStream(myVideo, stream);
+      addVideoStream(peerVideo, remoteStream);
+
     });
   }, function(err) {
     console.log('Failed to get local stream' ,err);
   });
-});*/
-
-/*
-function connectToNewUser(peerId, stream) {
-  const call = peer.call(peerId, stream);
-  const video = document.createElement("video");
-  call.on("stream", (userVideoStream) => {
-    addVideoStream(video, userVideoStream);
-  });
-}
-
-
-peer.on("call", (call) => {
-  call.answer(stream);
-  const video = document.createElement("video");
-  call.on("stream", (userVideoStream) => {
-    addVideoStream(video, userVideoStream);
-  });
 });
-
-socket.on("video call", function (data) {
-  console.log("video call: " + data);
-  connectToNewUser(data, myVideoStream);
-});*/

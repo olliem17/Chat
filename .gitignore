@@ -1,3 +1,5 @@
 node_modules/
 cert.pem
 key.pem
+csr.pem
+client.csr

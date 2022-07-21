@@ -12,9 +12,11 @@ const input = document.getElementById("input");
 const displayUsers = document.getElementById("users");
 const messages = document.getElementById("Group_messages");
 const video_call = document.getElementById("video_call");
+const endCallBtn = document.getElementById("endCallBtn")
 
 var messageView = document.getElementById("Group_messages").id;
 var userName;
+var call;
 
 ////////////////////////////////
 // Get the EJS Passed User ID //
@@ -33,8 +35,8 @@ var peerId = "";
 var peer = new Peer(username, {
   path: "/peerjs",
   host: "/",
-  secure:true,
-  port: 3000
+  secure: true,
+  port: 3000,
 });
 
 peer.on("open", (id) => {
@@ -73,6 +75,13 @@ video_call.addEventListener("click", function (e) {
   const sendStreamTo = messageView.split("_")[0];
   console.log("sendStreamTo: " + sendStreamTo + " from: " + username);
   startVideoCall(sendStreamTo);
+});
+
+endCallBtn.addEventListener("click", function (e) {
+  e.preventDefault();
+  console.log("closing video call");
+  call.close();
+  endCall(myStream);
 });
 
 ///////////////////////////////////
@@ -202,7 +211,7 @@ function addMessageNotification(from) {
       .getElementById(from)
       .getElementsByClassName("msg_status")[0];
     console.log("target notification: " + target);
-    target.style.display = "block";
+    target.style.display = "grid";
     if (!target.innerText) {
       target.innerText = 1;
     } else {
@@ -310,15 +319,15 @@ function attachPrivateMessageView(user) {
 
 const videosMain = document.getElementById("video_main");
 const videosGroup = document.getElementById("videos_group");
-
+var myStream;
 
 function startVideoCall(sendTo) {
   console.log("videosGroup: " + videosGroup);
   videosMain.style.display = "block";
-  
+
   const myVideo = document.createElement("video");
   const peerVideo = document.createElement("video");
-  
+
   myVideo.muted = false;
 
   const getUserMedia =
@@ -328,17 +337,18 @@ function startVideoCall(sendTo) {
   getUserMedia(
     { video: true, audio: true },
     function (stream) {
-      
+      myStream = stream;
       addVideoStream(myVideo, stream);
-      var call = peer.call(sendTo, stream);
+      call = peer.call(sendTo, stream);
 
-     call.on("stream", function (remoteStream) {
-       
-       console.log("DISPLAY MY STREAM");
-        
-        //console.log("DISPLAY REMOTE STREAM");
+      call.on("stream", function (remoteStream) {
+        console.log("DISPLAY MY STREAM");
         addVideoStream(peerVideo, remoteStream);
-     });
+      });
+
+      call.on('close', function (){
+        endCall(stream);
+      });
     },
     function (err) {
       console.log("Failed to get local stream", err);
@@ -352,36 +362,70 @@ function addVideoStream(video, stream, user) {
   video.addEventListener("loadedmetadata", function () {
     video.play();
     videoGrid.appendChild(video);
-    if(user == username) {
+    if (user == username) {
       var content = document.createTextNode(username);
-       videoGrid.appendChild(content);
+      videoGrid.appendChild(content);
     }
   });
 }
 
-peer.on('call', function(call) {
+peer.on("call", function (call) {
   videosMain.style.display = "block";
   const myVideo = document.createElement("video");
   const peerVideo = document.createElement("video");
-  
+
   console.log("CALL STREAM");
   const getUserMedia =
     navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia;
-  getUserMedia({video: true, audio: false}, function(stream) {
-    
-    
-    call.answer(stream); // Answer the call with an A/V stream.
-    
-    call.on('stream', function(remoteStream) {
-      console.log("ADD REMOTE STREAM");
-     
-      addVideoStream(myVideo, stream);
-      addVideoStream(peerVideo, remoteStream);
+  getUserMedia(
+    { video: true, audio: false },
+    function (stream) {
+      call.answer(stream); // Answer the call with an A/V stream.
+      
+      call.on("stream", function (remoteStream) {
+        console.log("ADD REMOTE STREAM");
 
-    });
-  }, function(err) {
-    console.log('Failed to get local stream' ,err);
-  });
+        addVideoStream(myVideo, stream);
+        addVideoStream(peerVideo, remoteStream);
+      });
+
+      call.on('close', function (){
+        endCall(stream);
+      });
+    },
+    function (err) {
+      console.log("Failed to get local stream", err);
+    }
+  );
 });
+
+// End Call
+function endCall(stream) {
+  videosMain.style.display = "none";
+
+    stream.getTracks().forEach(function(track) {
+        if (track.readyState == 'live') {
+            track.stop();
+        }
+    });
+}
+
+// stop only camera
+function stopVideo(stream) {
+  stream.getTracks().forEach(function(track) {
+      if (track.readyState == 'live' && track.kind === 'video') {
+          track.stop();
+      }
+  });
+}
+
+// stop only mic
+function stopAudio(stream) {
+  stream.getTracks().forEach(function(track) {
+      if (track.readyState == 'live' && track.kind === 'audio') {
+          track.stop();
+      }
+  });
+}

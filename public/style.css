@@ -328,12 +328,14 @@ hr {
   width: 23px;
   background-color: #00b01b;
   border-radius: 50%;
-  padding: 2px 7px;
+  padding-bottom: 2px;
   float: right;
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
   display: none;
+  align-items: center;
+  justify-content: center;
 }
 
 .messages {
@@ -420,44 +422,65 @@ hr {
 
 /* Video Layout */
 .video_main {
-  display: flex;
-  flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   top: 80px;
   position: fixed;
   background-color: #151d29;
   z-index: 100;
+  text-align: center;
+  min-height: 0;
 }
 .videos_group {
   display: flex;
+  top: 80px;
   flex-grow: 1;
   height: 87%;
-  align-items: stretch;
   justify-content: center;
-  align-items: center;
- 
+  align-items: stretch;
+  min-height: 0;
 }
 
 #video_grid {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap; 
+  display: grid;
+  flex-grow: 1;
+  width: 100%;
+  margin: 0 auto;
+  gap: 1rem;
+  align-items: stretch;
+  min-height: 0;
 }
 
-video{
-  max-width:480px;
+@media (min-width: 600px) {
+  #video_grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
+video {
+  width:100%;
+  min-height: 0;
+}
+
+
 .options {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right:0;
-  height: 80px;
-  padding: 1rem;
+  position: relative;
+  bottom: 50px;
+  max-width: 500px;
+  height: 60px;
+  margin: auto;
   display: flex;
-  background-color: #1D2635;
   z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.options__main {
+  width: 100%;
+  padding: 5px 20px;
+  display: flex;
+  background-color: #ffffff20;
+  border-radius: 40px;
 }
 .options__left {
   display: flex;
@@ -465,15 +488,31 @@ video{
 .options__right {
   margin-left: auto;
 }
+.options__end {
+  margin-left: 15px;
+}
 .options__button {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #00b01b;
+  /* background-color: #00b01b; */
   height: 50px;
   border-radius: 5px;
   color: #ffffff;
   font-size: 1.2rem;
   width: 50px;
+  margin: 0 0.5rem;
+}
+
+.options__red {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ff000080;
+  height: 60px;
+  border-radius: 30px;
+  color: #ffffff;
+  font-size: 1.2rem;
+  width: 60px;
   margin: 0 0.5rem;
 }

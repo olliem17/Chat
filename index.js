@@ -1,6 +1,7 @@
 ///////////////////////////////////
 // Exoress & Socket Server Setup //
 ///////////////////////////////////
+
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const sessions = require("express-session");
@@ -22,22 +23,23 @@ const credentials = {
 const server = https.createServer(credentials, app);
 const io = require("socket.io")(server, {
     cors: {
-      origin: "https://localhost:3000",
+      origin: "*",
     },
   });
 const PORT = 3000;
 const sessionAge = 1000 * 60 * 60;
+
+////////////////////////
+// Peer Server Config //
+////////////////////////
 
 const { ExpressPeerServer } = require("peer");
 const peerServer = ExpressPeerServer(server, {
   debug: true,
 });
 
-
 app.use("/peerjs", peerServer);
-
 app.set("view engine", "ejs");
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/public", express.static("public"));
@@ -173,9 +175,10 @@ io.on("connection", function (socket) {
     io.to(to).emit("video call", peerId);
   });
 
-//   socket.on("connect_error", (err) => {
-//     console.log(`connect_error due to ${err.message}`);
-//   });
+   socket.on("connect_error", (err) => {
+     console.log(`connect_error due to ${err.message}`);
+   });
+
 });
 
 server.listen(PORT, function () {
@@ -204,23 +207,3 @@ function getPeerId(sockets, username) {
     }
   }
 }
-
-////////////////////////
-// Peer Server Config //
-////////////////////////
-
-/*var ExpressPeerServer = require("peer").ExpressPeerServer;
-var peerExpress = require("express");
-var peerApp = peerExpress();
-var peerServer = http.createServer(peerApp);
-var options = {
-  debug: true,
-  secure: true,
-  ssl: {
-    key: key,
-    cert: cert,
-  },
-};
-var peerPort = 443;
-peerApp.use("/peerjs", ExpressPeerServer(peerServer, options));
-peerServer.listen(peerPort);*/

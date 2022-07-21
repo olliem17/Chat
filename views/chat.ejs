@@ -77,23 +77,47 @@
     <div class="video_main" id="video_main" style="display: none;">
     <div class="videos_group" id="videos_group" >
       <div id="video_grid">
+        <!-- <div class="card">ONE</div>
+        <div class="card">TWO</div>
+        <div class="card">THREE</div>
+        <div class="card">FOUR</div>
+        <div class="card">FIVE</div>
+        <div class="card">SIX</div> -->
 
       </div>
     </div>
     <div class="options">
+      <div class="options__main">
       <div class="options__left">
-        <div id="stopVideo" class="options__button">
-          <i class="fa fa-video-camera"></i>
-        </div>
         <div id="muteButton" class="options__button">
           <i class="fa fa-microphone"></i>
         </div>
+        <div id="videoBtn" class="options__button">
+          <i class="fa fa-video-camera"></i>
+        </div>
+        <div id="expandViewBtn" class="options__button">
+          <i class="fa fa-expand" aria-hidden="true"></i>
+        </div>
+        
+        <div id="screenShareBtn" class="options__button" onclick="shareScreen();" disabled>
+          <i class="fa fa-television"></i>
+        </div>
+
+        
+        
       </div>
       <div class="options__right">
-        <div id="inviteButton" class="options__button">
+        <div id="inviteBtn" class="options__button" onclick="shareScreen();" disabled>
           <i class="fa fa-plus"></i>
         </div>
       </div>
+      
+    </div>
+    <div class="options__end">
+      <div id="endCallBtn" class="options__red">
+        <i class="fa fa-phone" aria-hidden="true"></i>
+      </div>
+    </div>
     </div>
   </div>
     <span id='userId' hidden>

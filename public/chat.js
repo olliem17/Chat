@@ -12,11 +12,11 @@ const input = document.getElementById("input");
 const displayUsers = document.getElementById("users");
 const messages = document.getElementById("Group_messages");
 const video_call = document.getElementById("video_call");
-const endCallBtn = document.getElementById("endCallBtn")
+const endCallBtn = document.getElementById("endCallBtn");
 
 var messageView = document.getElementById("Group_messages").id;
 var userName;
-var call;
+
 
 ////////////////////////////////
 // Get the EJS Passed User ID //
@@ -30,7 +30,9 @@ jsonElement.remove();
 // Setup Peers //
 /////////////////
 
+var peerCon;
 var peerId = "";
+var call;
 
 var peer = new Peer(username, {
   path: "/peerjs",
@@ -39,11 +41,21 @@ var peer = new Peer(username, {
   port: 3000,
 });
 
+peer.on("connection", (conn) => {
+  peerCon = conn
+  console.log("peer connected "+peerCon)
+  conn.on("close", () => {
+    console.log("conn close event");
+    //handlePeerDisconnect();
+  });
+});
+
 peer.on("open", (id) => {
   peerId = id;
   console.log("peer_on_open: " + peerId);
   newUserConnected(username);
 });
+
 
 /////////////////////
 // Event Listeners //
@@ -80,7 +92,7 @@ video_call.addEventListener("click", function (e) {
 endCallBtn.addEventListener("click", function (e) {
   e.preventDefault();
   console.log("closing video call");
-  call.close();
+  peerCon.close();
   endCall(myStream);
 });
 
@@ -330,6 +342,8 @@ function startVideoCall(sendTo) {
 
   myVideo.muted = false;
 
+  peerCon = peer.connect(sendTo);
+
   const getUserMedia =
     navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
@@ -346,7 +360,7 @@ function startVideoCall(sendTo) {
         addVideoStream(peerVideo, remoteStream);
       });
 
-      call.on('close', function (){
+      peerCon.on("close", function () {
         endCall(stream);
       });
     },
@@ -383,7 +397,7 @@ peer.on("call", function (call) {
     { video: true, audio: false },
     function (stream) {
       call.answer(stream); // Answer the call with an A/V stream.
-      
+
       call.on("stream", function (remoteStream) {
         console.log("ADD REMOTE STREAM");
 
@@ -391,7 +405,8 @@ peer.on("call", function (call) {
         addVideoStream(peerVideo, remoteStream);
       });
 
-      call.on('close', function (){
+      peerCon.on("close", function () {
+        console.log("End stream for remote");
         endCall(stream);
       });
     },
@@ -404,28 +419,32 @@ peer.on("call", function (call) {
 // End Call
 function endCall(stream) {
   videosMain.style.display = "none";
+  const videoGrid = document.getElementById("video_grid");
+while (videoGrid.hasChildNodes()) {
+  videoGrid.removeChild(videoGrid.firstChild);
+}
 
-    stream.getTracks().forEach(function(track) {
-        if (track.readyState == 'live') {
-            track.stop();
-        }
-    });
+  stream.getTracks().forEach(function (track) {
+    if (track.readyState == "live") {
+      track.stop();
+    }
+  });
 }
 
 // stop only camera
 function stopVideo(stream) {
-  stream.getTracks().forEach(function(track) {
-      if (track.readyState == 'live' && track.kind === 'video') {
-          track.stop();
-      }
+  stream.getTracks().forEach(function (track) {
+    if (track.readyState == "live" && track.kind === "video") {
+      track.stop();
+    }
   });
 }
 
 // stop only mic
 function stopAudio(stream) {
-  stream.getTracks().forEach(function(track) {
-      if (track.readyState == 'live' && track.kind === 'audio') {
-          track.stop();
-      }
+  stream.getTracks().forEach(function (track) {
+    if (track.readyState == "live" && track.kind === "audio") {
+      track.stop();
+    }
   });
 }

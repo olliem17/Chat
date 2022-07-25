@@ -504,6 +504,11 @@ video {
   margin: 0 0.5rem;
 }
 
+.options__button:hover {
+  font-size: 1.4rem;
+  color: #ff0000;
+}
+
 .options__red {
   display: flex;
   justify-content: center;
@@ -515,4 +520,9 @@ video {
   font-size: 1.2rem;
   width: 60px;
   margin: 0 0.5rem;
+}
+
+.options__red:hover {
+  background-color: #ff0000;
+  font-size: 1.4rem;
 }

@@ -1,22 +1,17 @@
 const socket = io();
-/*const socket = io("/", {
-     reconnection:false,
-     transports: ['websocket'],
-     agent: false, 
-     upgrade: false,
-     rejectUnauthorized: false
-});*/
 
 const form = document.getElementById("form");
 const input = document.getElementById("input");
 const displayUsers = document.getElementById("users");
 const messages = document.getElementById("Group_messages");
+const videosMain = document.getElementById("video_main");
+const videosGroup = document.getElementById("videos_group");
 const video_call = document.getElementById("video_call");
 const endCallBtn = document.getElementById("endCallBtn");
+const expandViewBtn = document.getElementById("expandViewBtn")
 
 var messageView = document.getElementById("Group_messages").id;
 var userName;
-
 
 ////////////////////////////////
 // Get the EJS Passed User ID //
@@ -43,7 +38,7 @@ var peer = new Peer(username, {
 
 peer.on("connection", (conn) => {
   peerCon = conn
-  console.log("peer connected "+peerCon)
+  console.log("peer connected " + peerCon)
   conn.on("close", () => {
     console.log("conn close event");
     //handlePeerDisconnect();
@@ -94,6 +89,12 @@ endCallBtn.addEventListener("click", function (e) {
   console.log("closing video call");
   peerCon.close();
   endCall(myStream);
+});
+
+expandViewBtn.addEventListener("click", function (e) {
+  e.preventDefault();
+  console.log("switching view");
+  switchVideoView();
 });
 
 ///////////////////////////////////
@@ -185,9 +186,8 @@ function addMessage(data, msgType) {
                 <div class="received_message">
                   <p>${data.message}</p>
                   <div class="message_info">
-                    <span class="message_author">${
-                      msgType == "group" ? data.user : data.from
-                    }</span>
+                    <span class="message_author">${msgType == "group" ? data.user : data.from
+      }</span>
                     <span class="time_date">${formattedTime}</span>
                   </div>
                 </div>
@@ -328,17 +328,18 @@ function attachPrivateMessageView(user) {
 ///////////////////////////
 // Video Stream Handling //
 ///////////////////////////
-
-const videosMain = document.getElementById("video_main");
-const videosGroup = document.getElementById("videos_group");
 var myStream;
+var myVideo;
+var peerVideo;
 
 function startVideoCall(sendTo) {
+
   console.log("videosGroup: " + videosGroup);
+
   videosMain.style.display = "block";
 
-  const myVideo = document.createElement("video");
-  const peerVideo = document.createElement("video");
+  myVideo = document.createElement("video");
+  peerVideo = document.createElement("video");
 
   myVideo.muted = false;
 
@@ -385,8 +386,8 @@ function addVideoStream(video, stream, user) {
 
 peer.on("call", function (call) {
   videosMain.style.display = "block";
-  const myVideo = document.createElement("video");
-  const peerVideo = document.createElement("video");
+  myVideo = document.createElement("video");
+  peerVideo = document.createElement("video");
 
   console.log("CALL STREAM");
   const getUserMedia =
@@ -420,10 +421,9 @@ peer.on("call", function (call) {
 function endCall(stream) {
   videosMain.style.display = "none";
   const videoGrid = document.getElementById("video_grid");
-while (videoGrid.hasChildNodes()) {
-  videoGrid.removeChild(videoGrid.firstChild);
-}
-
+  while (videoGrid.hasChildNodes()) {
+    videoGrid.removeChild(videoGrid.firstChild);
+  }
   stream.getTracks().forEach(function (track) {
     if (track.readyState == "live") {
       track.stop();
@@ -447,4 +447,18 @@ function stopAudio(stream) {
       track.stop();
     }
   });
+}
+
+// switch stream view
+function switchVideoView() {
+  //first check current view
+  const videoSmall = document.getElementsByClassName('video_small');
+  if (videoSmall.length > 0) {
+    myVideo.classList.remove("video_small");
+    peerVideo.classList.remove("video_large")
+  } else {
+    
+    myVideo.classList.add("video_small");
+    peerVideo.classList.add("video_large")
+  }
 }

@@ -37,7 +37,7 @@ body {
   text-align: center;
 }
 
-.login > h1 {
+.login>h1 {
   font-size: 32px;
   font-weight: 200;
   color: #e6d7fa;
@@ -45,7 +45,7 @@ body {
   text-align: center;
 }
 
-.login > p {
+.login>p {
   font-size: 18px;
   font-weight: 200;
   color: #ffffff;
@@ -74,6 +74,7 @@ body {
   padding: 0.25rem;
   text-align: center;
 }
+
 #username {
   text-align: left;
   width: 100%;
@@ -88,6 +89,7 @@ body {
   border-bottom: 1px solid #ffffff20;
   border-left: 1.5px solid #ffffff20;
 }
+
 #username:focus {
   outline: none;
 }
@@ -95,7 +97,8 @@ body {
 #username::placeholder {
   color: #ffffff60;
 }
-#chat-login > button {
+
+#chat-login>button {
   display: block;
   margin-top: 25px;
   text-align: center;
@@ -109,7 +112,7 @@ body {
   color: #f1ecf7;
 }
 
-#chat-login > button:hover {
+#chat-login>button:hover {
   background: #8655fa;
 }
 
@@ -118,7 +121,7 @@ h5 {
   margin: 10px 0;
 }
 
-.con-users > h4 {
+.con-users>h4 {
   color: #8af3ff;
 
   font-size: 20px;
@@ -164,7 +167,7 @@ hr {
   height: 80px;
 }
 
-.branding > h1 {
+.branding>h1 {
   color: #f4f4f4;
   font-size: 32px;
   font-weight: 200;
@@ -196,7 +199,7 @@ hr {
   border-bottom: 1px solid #e0dddd;
 }
 
-.messages_header > h1 {
+.messages_header>h1 {
   position: relative;
   color: #666666;
   font-size: 32px;
@@ -205,7 +208,7 @@ hr {
   float: left;
 }
 
-.messages_header > .icons {
+.messages_header>.icons {
   display: absolute;
   margin: 0;
   float: right;
@@ -250,6 +253,7 @@ hr {
   backdrop-filter: blur(10px);
   border-top: 1px solid #e0dddd;
 }
+
 #input {
   border: none;
   padding: 0.5rem 1rem;
@@ -262,6 +266,7 @@ hr {
   border-right: 1px solid #e0dddd;
   height: 2.9rem;
 }
+
 #input:focus {
   outline: none;
 }
@@ -288,7 +293,7 @@ hr {
   padding-right: 0.5rem;
 }
 
-#form > button {
+#form>button {
   background: #00b01b;
   border: none;
   padding: 0 1rem;
@@ -299,7 +304,7 @@ hr {
   color: #fff;
 }
 
-#form > button:hover {
+#form>button:hover {
   background: #04bf20;
 }
 
@@ -356,7 +361,7 @@ hr {
   clear: both;
 }
 
-.sent_message > p {
+.sent_message>p {
   margin: 5px;
   padding: 0.75rem 1.2rem;
   border-radius: 10px;
@@ -365,7 +370,7 @@ hr {
   border-width: 1px;
 }
 
-.received_message > p {
+.received_message>p {
   margin: 5px;
   padding: 0.75rem 1.2rem;
   border-radius: 10px;
@@ -424,18 +429,20 @@ hr {
 .video_main {
   width: 100%;
   height: 100vh;
-  top: 80px;
+  top: 0;
   position: fixed;
   background-color: #151d29;
   z-index: 100;
   text-align: center;
   min-height: 0;
 }
+
 .videos_group {
   display: flex;
-  top: 80px;
+  /* top: 80px; */
   flex-grow: 1;
-  height: 87%;
+  /* height: 87%; */
+  height: 100vh;
   justify-content: center;
   align-items: stretch;
   min-height: 0;
@@ -446,7 +453,7 @@ hr {
   flex-grow: 1;
   width: 100%;
   margin: 0 auto;
-  gap: 1rem;
+  gap: 15px;
   align-items: stretch;
   min-height: 0;
 }
@@ -458,14 +465,34 @@ hr {
 }
 
 video {
-  width:100%;
+  width: 100%;
   min-height: 0;
+  margin: 15px;
 }
+
+.video_small {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  width: 225px;
+  border: 1.25px solid #FFFFFF90;
+  z-index: 1000;
+}
+
+.video_large {
+  position: fixed;
+  margin: 0;
+  top: 0px;
+  right: 0px;
+  object-fit: cover;
+}
+
+
 
 
 .options {
   position: relative;
-  bottom: 50px;
+  bottom: 80px;
   max-width: 500px;
   height: 60px;
   margin: auto;
@@ -482,15 +509,19 @@ video {
   background-color: #ffffff20;
   border-radius: 40px;
 }
+
 .options__left {
   display: flex;
 }
+
 .options__right {
   margin-left: auto;
 }
+
 .options__end {
   margin-left: 15px;
 }
+
 .options__button {
   display: flex;
   justify-content: center;

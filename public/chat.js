@@ -431,7 +431,7 @@ function endCall(stream) {
   });
 }
 
-// stop only camera
+// stop camera
 function stopVideo(stream) {
   stream.getTracks().forEach(function (track) {
     if (track.readyState == "live" && track.kind === "video") {
@@ -440,7 +440,7 @@ function stopVideo(stream) {
   });
 }
 
-// stop only mic
+// stop mic
 function stopAudio(stream) {
   stream.getTracks().forEach(function (track) {
     if (track.readyState == "live" && track.kind === "audio") {
@@ -448,6 +448,8 @@ function stopAudio(stream) {
     }
   });
 }
+
+function 
 
 // switch stream view
 function switchVideoView() {
@@ -457,7 +459,6 @@ function switchVideoView() {
     myVideo.classList.remove("video_small");
     peerVideo.classList.remove("video_large")
   } else {
-    
     myVideo.classList.add("video_small");
     peerVideo.classList.add("video_large")
   }

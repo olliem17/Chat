@@ -449,7 +449,9 @@ function stopAudio(stream) {
   });
 }
 
-function 
+function shareScreen() {
+  
+}
 
 // switch stream view
 function switchVideoView() {

@@ -485,6 +485,8 @@ video {
   top: 0px;
   right: 0px;
   object-fit: cover;
+  height: 100vh;
+  z-index: 50;
 }
 
 

@@ -8,7 +8,9 @@ const videosMain = document.getElementById("video_main");
 const videosGroup = document.getElementById("videos_group");
 const video_call = document.getElementById("video_call");
 const endCallBtn = document.getElementById("endCallBtn");
-const expandViewBtn = document.getElementById("expandViewBtn")
+const expandViewBtn = document.getElementById("expandViewBtn");
+//const shareScreenBtn = document.getElementById("screenShareBtn");
+const shareScreenBtn = document.getElementById("share");
 
 var messageView = document.getElementById("Group_messages").id;
 var userName;
@@ -37,8 +39,8 @@ var peer = new Peer(username, {
 });
 
 peer.on("connection", (conn) => {
-  peerCon = conn
-  console.log("peer connected " + peerCon)
+  peerCon = conn;
+  console.log("peer connected " + peerCon);
   conn.on("close", () => {
     console.log("conn close event");
     //handlePeerDisconnect();
@@ -50,7 +52,6 @@ peer.on("open", (id) => {
   console.log("peer_on_open: " + peerId);
   newUserConnected(username);
 });
-
 
 /////////////////////
 // Event Listeners //
@@ -89,6 +90,13 @@ endCallBtn.addEventListener("click", function (e) {
   console.log("closing video call");
   peerCon.close();
   endCall(myStream);
+});
+
+shareScreenBtn.addEventListener("click", function (e) {
+  //e.preventDefault();
+  console.log("share screen");
+  const sendStreamTo = messageView.split("_")[0];
+  shareScreen(sendStreamTo);
 });
 
 expandViewBtn.addEventListener("click", function (e) {
@@ -186,8 +194,9 @@ function addMessage(data, msgType) {
                 <div class="received_message">
                   <p>${data.message}</p>
                   <div class="message_info">
-                    <span class="message_author">${msgType == "group" ? data.user : data.from
-      }</span>
+                    <span class="message_author">${
+                      msgType == "group" ? data.user : data.from
+                    }</span>
                     <span class="time_date">${formattedTime}</span>
                   </div>
                 </div>
@@ -330,10 +339,12 @@ function attachPrivateMessageView(user) {
 ///////////////////////////
 var myStream;
 var myVideo;
+var peerStream;
 var peerVideo;
+var myScreen;
+var peerScreen;
 
 function startVideoCall(sendTo) {
-
   console.log("videosGroup: " + videosGroup);
 
   videosMain.style.display = "block";
@@ -350,19 +361,20 @@ function startVideoCall(sendTo) {
     navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia;
   getUserMedia(
-    { video: true, audio: true },
+    { video: true, audio: false },
     function (stream) {
       myStream = stream;
       addVideoStream(myVideo, stream);
-      call = peer.call(sendTo, stream);
+      const options = {metadata: {"type":"cam"}};
+      call = peer.call(sendTo, stream, options);
 
       call.on("stream", function (remoteStream) {
-        console.log("DISPLAY MY STREAM");
+        console.log("DISPLAY REMOTE STREAM--------: "+call.metadata.type);
         addVideoStream(peerVideo, remoteStream);
       });
 
       peerCon.on("close", function () {
-        endCall(stream);
+        endCall(myStream);
       });
     },
     function (err) {
@@ -385,37 +397,36 @@ function addVideoStream(video, stream, user) {
 }
 
 peer.on("call", function (call) {
-  videosMain.style.display = "block";
-  myVideo = document.createElement("video");
-  peerVideo = document.createElement("video");
+    videosMain.style.display = "block";
+    myVideo = document.createElement("video");
+    peerVideo = document.createElement("video");
+    console.log("incoming call: "+call.metadata.type);
+    console.log("CALL STREAM");
+    const getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia;
+    getUserMedia({ video: true, audio: true }, function (stream) {
+      myStream = stream;
+      const options = {metadata: {"type":"cam2"}};
+      call.answer(stream, options); // Answer the call with an A/V stream.
+      addVideoStream(myVideo, stream);
+    });
+    call.on("stream", function (remoteStream) {
+      console.log("ADD REMOTE STREAM: ");
 
-  console.log("CALL STREAM");
-  const getUserMedia =
-    navigator.getUserMedia ||
-    navigator.webkitGetUserMedia ||
-    navigator.mozGetUserMedia;
-  getUserMedia(
-    { video: true, audio: false },
-    function (stream) {
-      call.answer(stream); // Answer the call with an A/V stream.
+      addVideoStream(peerVideo, remoteStream);
+    });
 
-      call.on("stream", function (remoteStream) {
-        console.log("ADD REMOTE STREAM");
-
-        addVideoStream(myVideo, stream);
-        addVideoStream(peerVideo, remoteStream);
-      });
-
-      peerCon.on("close", function () {
-        console.log("End stream for remote");
-        endCall(stream);
-      });
-    },
-    function (err) {
-      console.log("Failed to get local stream", err);
-    }
-  );
-});
+    peerCon.on("close", function (stream) {
+      console.log("End stream for remote");
+      endCall(myStream);
+    });
+  },
+  function (err) {
+    console.log("Failed to get local stream", err);
+  }
+);
 
 // End Call
 function endCall(stream) {
@@ -449,19 +460,40 @@ function stopAudio(stream) {
   });
 }
 
-function shareScreen() {
-  
+async function shareScreen(sendTo) {
+  navigator.mediaDevices
+    .getDisplayMedia({ video: true })
+    .then(function (stream) {
+      stream.type = "screen";
+      console.log("Sharing screen: " + stream.type);
+      myScreen = document.createElement("video");
+      myScreen.className = "video_large";
+      //addVideoStream(myScreen, stream);
+      myScreen.srcObject = stream;
+      const videoGrid = document.getElementById("body");
+      myScreen.addEventListener("loadedmetadata", function () {
+        myScreen.play();
+        videoGrid.appendChild(myScreen);
+      });
+    })
+    .catch(function (error) {
+      console.log("Sharing screen error: " + error);
+    });
+}
+
+function handleScreenShare(stream) {
+  console.log("got screen" + stream);
 }
 
 // switch stream view
 function switchVideoView() {
   //first check current view
-  const videoSmall = document.getElementsByClassName('video_small');
+  const videoSmall = document.getElementsByClassName("video_small");
   if (videoSmall.length > 0) {
     myVideo.classList.remove("video_small");
-    peerVideo.classList.remove("video_large")
+    peerVideo.classList.remove("video_large");
   } else {
     myVideo.classList.add("video_small");
-    peerVideo.classList.add("video_large")
+    peerVideo.classList.add("video_large");
   }
 }

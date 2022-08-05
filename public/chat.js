@@ -9,8 +9,8 @@ const videosGroup = document.getElementById("videos_group");
 const video_call = document.getElementById("video_call");
 const endCallBtn = document.getElementById("endCallBtn");
 const expandViewBtn = document.getElementById("expandViewBtn");
-//const shareScreenBtn = document.getElementById("screenShareBtn");
-const shareScreenBtn = document.getElementById("share");
+const shareScreenBtn = document.getElementById("screenShareBtn");
+//const shareScreenBtn = document.getElementById("share");
 
 var messageView = document.getElementById("Group_messages").id;
 var userName;
@@ -365,11 +365,11 @@ function startVideoCall(sendTo) {
     function (stream) {
       myStream = stream;
       addVideoStream(myVideo, stream);
-      const options = {metadata: {"type":"cam"}};
+      const options = { metadata: { type: "cam" } };
       call = peer.call(sendTo, stream, options);
 
       call.on("stream", function (remoteStream) {
-        console.log("DISPLAY REMOTE STREAM--------: "+call.metadata.type);
+        console.log("DISPLAY REMOTE STREAM--------: " + call.metadata.type);
         addVideoStream(peerVideo, remoteStream);
       });
 
@@ -396,22 +396,32 @@ function addVideoStream(video, stream, user) {
   });
 }
 
-peer.on("call", function (call) {
-    videosMain.style.display = "block";
-    myVideo = document.createElement("video");
-    peerVideo = document.createElement("video");
-    console.log("incoming call: "+call.metadata.type);
-    console.log("CALL STREAM");
-    const getUserMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia;
-    getUserMedia({ video: true, audio: true }, function (stream) {
-      myStream = stream;
-      const options = {metadata: {"type":"cam2"}};
-      call.answer(stream, options); // Answer the call with an A/V stream.
-      addVideoStream(myVideo, stream);
-    });
+peer.on(
+  "call",
+  function (call) {
+
+    const streamType = call.metadata.type;
+    console.log("incoming call: " + call.metadata.type);
+    
+
+    if (streamType === "cam") {
+      videosMain.style.display = "block";
+      myVideo = document.createElement("video");
+      peerVideo = document.createElement("video");
+      const getUserMedia =
+        navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia;
+      getUserMedia({ video: true, audio: true }, function (stream) {
+        myStream = stream;
+        const options = { metadata: { type: "cam2" } };
+        call.answer(stream, options); // Answer the call with an A/V stream.
+        addVideoStream(myVideo, stream);
+      });
+    }  else {
+      console.log("adding peer screen share");
+      peerScreen = document.createElement("video");
+    }
     call.on("stream", function (remoteStream) {
       console.log("ADD REMOTE STREAM: ");
 
@@ -467,14 +477,17 @@ async function shareScreen(sendTo) {
       stream.type = "screen";
       console.log("Sharing screen: " + stream.type);
       myScreen = document.createElement("video");
-      myScreen.className = "video_large";
-      //addVideoStream(myScreen, stream);
-      myScreen.srcObject = stream;
-      const videoGrid = document.getElementById("body");
-      myScreen.addEventListener("loadedmetadata", function () {
-        myScreen.play();
-        videoGrid.appendChild(myScreen);
-      });
+      //myScreen.className = "video_large";
+      addVideoStream(myScreen, stream);
+      const options = { metadata: { type: "screen" } };
+      peer.connect(sendTo);
+      call = peer.call(sendTo, stream, options);
+      //myScreen.srcObject = stream;
+      //const videoGrid = document.getElementById("body");
+      //myScreen.addEventListener("loadedmetadata", function () {
+      //myScreen.play();
+      //videoGrid.appendChild(myScreen);
+      //});
     })
     .catch(function (error) {
       console.log("Sharing screen error: " + error);
